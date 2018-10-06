@@ -96,6 +96,10 @@ def solve_path(maze, start, goal):
     queue = PriorityQueue() 
     queue.put(start)
 
+    try:
+        print(StorageHelper.read("test"))
+    except:
+        pass
     print(start.coords, goal.coords)
 
     while not queue.empty():
@@ -260,7 +264,7 @@ class Bot:
                 yMin = 255 + yMin
             if xMin < 0:
                 xMin = 255 + xMin
-            Target = Node(xMin, yMin)
+            Target = Node(xMin, self.PlayerInfo.Position.y)
             self.path = solve_path(self.gameMap._tiles, pos, Target)
             return self.move(self.path)
             #create_move_action(self.path[0])
