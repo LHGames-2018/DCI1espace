@@ -146,15 +146,19 @@ class Bot:
         house = self.PlayerInfo.HouseLocation
         house = Node(house.x, house.y)
         
-        if pos.coords == house.coords and self.PlayerInfo.TotalResources > 10000:
+        print(self.PlayerInfo.UpgradeLevels)
+        if pos.coords == house.coords:
+            player = self.PlayerInfo
+
+            #if player.player.TotalResources > 10000:
             pass
             #return create_
         if self.PlayerInfo.CarriedResources < 1000:
             ressources = self.get_ressources(gameMap.tiles)
             #print(ressources)
             #print(pos)
-            closest_res = find_closest(pos, ressources)
-            print(closest_res.coords)
+            #closest_res = find_closest(pos, ressources)
+            #print(closest_res.coords)
 
             ressources.sort(key=lambda x: manhattan(pos.coords, x.coords))
             for i in range(len(ressources)):
