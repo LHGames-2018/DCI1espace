@@ -8,19 +8,20 @@ class Bot:
     def __init__(self):
         pass
 
-    def findClosest(self, tiles, type):
+    def sortClosest(self, tiles, type):
         for tile in tiles:
             if tile.TileContent == type :
                 # ressources[] TODO
         return 0
 
     def evaluateRessource(self):
-        closestRessource = self.findClosest(self.gameMap.tiles, 4)
+        closestRessource = self.sortClosest(self.gameMap.tiles, 4)
         path = pathFinfing(self.PlayerInfo.position, closestRessource)
+        if path == None
         return RESSOURCE_BY_BLOC / len(path)
 
     def evaluatekill(self):
-        closestplayer = self.findClosest(self.gameMap.tiles, 6)
+        closestplayer = self.sortClosest(self.gameMap.tiles, 6)
         path = pathFinfing(self.PlayerInfo.position, closestplayer)
         return RESSOURCE_BY_BLOC / len(path)
 
@@ -71,7 +72,7 @@ class Bot:
         Costs["goKill"] = self.evaluatekill()
         Costs["goUpgrade"], item = self.evaluateUpgrade()
 
-        nextPlan = max(Costs, key=Costs.get)
+        nextPlan = min(Costs, key=Costs.get)
 
         # PLAN
         if nextPlan == "getRessource":
