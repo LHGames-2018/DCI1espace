@@ -1,10 +1,37 @@
 from helper import *
+import math 
 
 
 class Bot:
     def __init__(self):
         pass
 
+    def evaluateUpgrade():
+
+        essentialItems = [Sword, Shield, Backpack]
+        totalRessources = self.PlayerInfo.totalRessources
+        level = getUpgradeLevel(self, CarryingCapacity)
+        priority = -math.inf, None
+        
+        if(level <= 3:):
+            if level == 1 and totalRessources >= 10000:
+                priority = math.inf, UgradeType.CarryingCapacity
+            if level == 2 and totalRessources >= 15000
+                priority = math.inf, UgradeType.CarryingCapacity 
+            if level == 3 and totalRessources >= 25000:
+                priority = math.inf, UgradeType.CarryingCapacity 
+        else:
+            if all(i in essentialItems for i in self.playerInfo.carriedItems):
+               if level == 4 and totalRessources >= 50000:
+                    priority = math.inf, UgradeType.CarryingCapacity 
+
+        return priority
+            
+
+    def evaluatePurchase():
+
+        
+        
     def before_turn(self, playerInfo):
         """
         Gets called before ExecuteTurn. This is where you get your bot's state.
