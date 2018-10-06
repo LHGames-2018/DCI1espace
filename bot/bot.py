@@ -151,6 +151,8 @@ RESSOURCE_BY_PLAYER = 10000
 
 class Bot:
     def __init__(self):
+        self.peace = 0
+        self.prev_score = 0
         pass
 
     def sortClosest(self, tiles, type):
@@ -247,6 +249,11 @@ class Bot:
             :param gameMap: The gamemap.
             :param visiblePlayers:  The list of visible players.
         """
+        self.peace -= 1
+        if self.prev_score < self.PlayerInfo.Score:
+            self.prev_score = self.PlayerInfo.Score
+            self.peace = 10
+
         try:
             pass
             #prev_score = int(StorageHelper.read("points"))
@@ -263,7 +270,7 @@ class Bot:
         self.visiblePlayers = visiblePlayers
 
         # GO KILLING LEFT
-        if len(self.sortClosest(self.gameMap.tiles, TileContent.Player)) == 1:
+        if len(self.sortClosest(self.gameMap.tiles, TileContent.Player)) == 1 or self.peace > 0:
             print("test")
             pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
             print("yMin: ", self.gameMap.yMin)
