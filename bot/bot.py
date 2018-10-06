@@ -134,20 +134,26 @@ class Bot:
 
     def evaluateRessource(self):
         closestRessource = self.sortClosest(self.gameMap.tiles, 4)
-        path = None
-        i = 0
-        while path != None:
-            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, closestRessource[i])
-            i += 1
+
+        for ressource in closestRessource:
+            pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+            path = solve_path(self.gameMap.tiles, pos, ressource)
+            if path != None:
+                self.ressourcePath = path
+                break
+
         return RESSOURCE_BY_BLOC / len(path)
 
     def evaluatekill(self):
         closestplayer = self.sortClosest(self.gameMap.tiles, 6)
-        path = None
-        i = 0
-        while path != None:
-            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, closestplayer[i])
-            i += 1
+
+        for player in closestplayer:
+            pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+            path = solve_path(self.gameMap.tiles, pos, player)
+            if path != None:
+                self.killingPath = path
+                break
+
         return RESSOURCE_BY_PLAYER / len(path)
 
     def evaluateUpgrade(self):
@@ -227,12 +233,14 @@ class Bot:
         self.gameMap = gameMap
         self.visiblePlayers = visiblePlayers
 
-        Costs = {"ressource":0, "kill":0, "upgrade":0}
-
+        # GO KILLING LEFT
         while len(self.sortClosest(self.gameMap.tiles, 6)) == 0:
-            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, Point(self.gameMap.xMin, self.PlayerInfo.Position.y))
+            pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+            Target = Node(self.gameMap.xMin, self.PlayerInfo.Position.y)
+            self.path = solve_path(self.gameMap.tiles, pos, Target)
             create_move_action(self.path[0])
 
+        Costs = {"ressource": math.inf, "kill": math.inf, "upgrade": math.inf}
         Costs["getRessource"] = self.evaluateRessource()
         Costs["goKill"] = self.evaluatekill()
         Costs["goUpgrade"], item = self.evaluateUpgrade()
@@ -241,20 +249,23 @@ class Bot:
 
         # PLAN
         if nextPlan == "getRessource":
-            if len(self.path) < 2 or self.path[0]+self.PlayerInfo.Position == self.PlayerInfo.HouseLocation:
+            self.path = self.ressourcePath
+            if len(self.path) < 2 and self.path[0]+self.PlayerInfo.Position != self.PlayerInfo.HouseLocation:
                 nextAction = "collect"
             else:
                 nextAction = "move"
 
         elif nextPlan == "goKill":
+            self.path = self.killingPath
             if len(self.path) < 2 or self.gameMap.getTileAt(self.path[0]+self.PlayerInfo.Position) == 1:
                 nextAction = "attack"
             else:
                 nextAction = "move"
 
         elif nextPlan == "goUpgrade":
+            self.path = self.upgradePath
             if len(self.path) < 2:
-                nextAction = "purchase"
+                nextAction = "upgrade"
             else:
                 nextAction = "move"
 
@@ -266,7 +277,7 @@ class Bot:
         elif nextAction == "attack":
             return create_attack_action(self.path[0])
         elif nextAction == "purchase":
-            return create_purchase_action(item)
+            return create_upgrade_action(item)
 
     def after_turn(self):
         """
