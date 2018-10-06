@@ -15,10 +15,6 @@ class Node():
     def __eq__(self, other):
         return self.estimate == other.estimate
 
-    def __cmp__(self, other):
-        print("comparing")
-        return cmp(self.estimate, other.estimate)
-
 def manhattan(coord1, coord2):
     return abs(coord1[0]-coord2[0]) + abs(coord1[1]-coord2[1])
 
@@ -34,8 +30,8 @@ def normalize_tiles(gameMap):
                 result[coord.y][coord.x] = 'R'
             if tile.TileContent == TileContent.House:
                 result[coord.y][coord.x] = ' '
-
-
+            if tile.TileContent == TileContent.Wall:
+                result[coord.y][coord.x] = 'T'
     return result
 
 def print_view(maze):
@@ -51,9 +47,8 @@ def reconstruct_path(maze, paths, node):
     while paths[node] != None:
         prev = paths[node]
         move = (node[0]-prev[0], node[1]-prev[1])
-        result.insert(len(result), move)
+        result.insert(0, move)
         node = prev
-    
     return result
 
 def solve_path(maze, start, goal):
@@ -73,7 +68,7 @@ def solve_path(maze, start, goal):
         if current_node.coords == goal.coords:
             return reconstruct_path(maze, paths, current_node.coords)
         
-        neighbors = get_neighbors(maze, current_node)
+        neighbors = get_neighbors(maze, current_node, goal)
         for neighbor in neighbors:
             neighbor.cost = current_node.cost + cost(maze, current_node, neighbor)
             neighbor.estimate = neighbor.cost + cost_estimate(maze, neighbor, goal)
@@ -89,7 +84,7 @@ def cost(maze, node, neighbor):
 def cost_estimate(maze, node, goal):
     return manhattan(node.coords, goal.coords) 
 
-def get_neighbors(maze, node):
+def get_neighbors(maze, node, goal):
     result = []
     left  = (node.coords[0]-1, node.coords[1])
     up    = (node.coords[0], node.coords[1]-1)
@@ -100,18 +95,9 @@ def get_neighbors(maze, node):
     for pos in Positions:
         if pos[0] < 0 or pos[1] < 0:
             continue
-        if maze[pos[1]][pos[0]] == ' ' or maze[pos[1]][pos[0]] == 'R':
+        if pos == goal.coords or maze[pos[1]][pos[0]] == ' ': # or maze[pos[1]][pos[0]] == 'T':
             result.append(Node(pos[0], pos[1]))
     return result
-
-def find_closest(pos, nodes):
-    closest = None
-    min_distance = 1000000
-    for node in nodes:
-        if manhattan(pos.coords, node.coords) < min_distance:
-            closest = node
-            min_distance = manhattan(pos.coords, node.coords)
-    return closest
 
 RESSOURCE_BY_BLOC = 1000 # guess
 RESSOURCE_BY_PLAYER = 10000
@@ -137,7 +123,7 @@ class Bot:
         path = None
         i = 0
         while path != None:
-            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, closestRessource[i])
+            path = solve_path(self.gameMap._tiles, self.PlayerInfo.Position, closestRessource[i])
             i += 1
         return RESSOURCE_BY_BLOC / len(path)
 
@@ -146,7 +132,7 @@ class Bot:
         path = None
         i = 0
         while path != None:
-            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, closestplayer[i])
+            path = solve_path(self.gameMap._tiles, self.PlayerInfo.Position, closestplayer[i])
             i += 1
         return RESSOURCE_BY_PLAYER / len(path)
 
@@ -175,6 +161,20 @@ class Bot:
     def evaluatePurchase(self):
         return 0
 
+    def go_home(self, gameMap):
+        tiles = normalize_tiles(gameMap)
+        pos = self.PlayerInfo.Position
+        pos = Node(pos.x, pos.y)
+        house = self.PlayerInfo.HouseLocation
+        house = Node(house.x, house.y)
+        path = solve_path(tiles, pos, house)
+        if path != None:
+            point = Point(path[0][0], path[0][1])
+            return create_move_action(point)
+        else    
+            print("something bad happened")
+            return create_move_action(Point(-1, 0))
+
     def before_turn(self, playerInfo):
         """
         Gets called before ExecuteTurn. This is where you get your bot's state.
@@ -183,54 +183,19 @@ class Bot:
         self.PlayerInfo = playerInfo
 
     def execute_turn(self, gameMap, visiblePlayers):
-        #return create_move_action(Point(0, 1))
-        tiles = normalize_tiles(gameMap)
-        pos = self.PlayerInfo.Position
-        pos = Node(pos.x, pos.y)
-        if self.PlayerInfo.CarriedResources < self.PlayerInfo.CarryingCapacity:
-            ressources = self.get_ressources(gameMap.tiles)
-            #print(ressources)
-            #print(pos)
-            closest_res = find_closest(pos, ressources)
-            print(closest_res.coords)
-
-            ressources.sort(key=lambda x: manhattan(pos.coords, x.coords))
-
-            for i in range(len(ressources)):
-                path = solve_path(tiles, pos, ressources[i])
-                if path != "Could not find a solution.":
-                    break
-
-            print(self.PlayerInfo.CarriedResources)
-            point = Point(path[0][0], path[0][1])
-            if len(path) > 1:
-                return create_move_action(point)
-            else:
-                return create_collect_action(point)
-        else:
-            house = self.PlayerInfo.HouseLocation
-            house = Node(house.x, house.y)
-            path = solve_path(tiles, pos, house)
-            if path != "Could not find a solution.":
-                point = Point(path[0][0], path[0][1])
-                return create_move_action(point)
-            else:
-                print("NO path")
-        #path = solve_path(tiles, pos, closest_res)
-        #print(path)
-        #print(solve_path(gameMap, pos, )
         """
         This is where you decide what action to take.
             :param gameMap: The gamemap.
             :param visiblePlayers:  The list of visible players.
         """
         self.gameMap = gameMap
+        self.gameMap._tiles = normalize_tiles(self.gameMap)
         self.visiblePlayers = visiblePlayers
 
         Costs = {"ressource":0, "kill":0, "upgrade":0}
 
         while len(self.sortClosest(self.gameMap.tiles, 6)) == 0:
-            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, Point(self.gameMap.xMin, self.PlayerInfo.Position.y))
+            path = solve_path(self.gameMap._tiles, self.PlayerInfo.Position, Point(self.gameMap.xMin, self.PlayerInfo.Position.y))
             create_move_action(self.path[0])
 
         Costs["getRessource"] = self.evaluateRessource()
@@ -241,7 +206,7 @@ class Bot:
 
         # PLAN
         if nextPlan == "getRessource":
-            if len(self.path) < 2 or self.path[0]+self.PlayerInfo.Position == self.PlayerInfo.HouseLocation:
+            if len(self.path) < 2 and self.path[0]+self.PlayerInfo.Position != self.PlayerInfo.HouseLocation:
                 nextAction = "collect"
             else:
                 nextAction = "move"
