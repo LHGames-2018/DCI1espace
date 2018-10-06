@@ -114,7 +114,7 @@ def find_closest(pos, nodes):
     return closest
 
 RESSOURCE_BY_BLOC = 1000 # guess
-RESSOURCE_BY_PLAYER = 1000 # TODO more details
+RESSOURCE_BY_PLAYER = 10000
 
 class Bot:
     def __init__(self):
@@ -187,7 +187,7 @@ class Bot:
         tiles = normalize_tiles(gameMap)
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
-        if self.PlayerInfo.CarriedResources < 1000:
+        if self.PlayerInfo.CarriedResources < self.PlayerInfo.CarryingCapacity:
             ressources = self.get_ressources(gameMap.tiles)
             #print(ressources)
             #print(pos)
@@ -228,6 +228,10 @@ class Bot:
         self.visiblePlayers = visiblePlayers
 
         Costs = {"ressource":0, "kill":0, "upgrade":0}
+
+        while len(self.sortClosest(self.gameMap.tiles, 6)) == 0:
+            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, Point(self.gameMap.xMin, self.PlayerInfo.Position.y))
+            create_move_action(self.path[0])
 
         Costs["getRessource"] = self.evaluateRessource()
         Costs["goKill"] = self.evaluatekill()
