@@ -5,7 +5,11 @@ class Bot:
     def __init__(self):
         pass
 
+    def findClosest(self, tiles, type):
+        for tile in tiles
+
     def evaluateRessource(self):
+        self.gameMap.tiles
         return 0
 
     def evaluatekill(self):
@@ -28,6 +32,13 @@ class Bot:
             :param gameMap: The gamemap.
             :param visiblePlayers:  The list of visible players.
         """
+        self.gameMap = gameMap
+        self.visiblePlayers = visiblePlayers
+
+        # Save house position
+        for tile in gameMap.tiles:
+            if tile.TileContent == 2:
+                housePos = tile.Position
 
         Costs = {"ressource":0, "kill":0, "upgrade":0}
 
@@ -39,7 +50,7 @@ class Bot:
 
         # PLAN
         if nextPlan == "getRessource":
-            if len(self.path) < 2:
+            if len(self.path) < 2 or self.path[0]+self.PlayerInfo.Position == housePos:
                 nextAction = "collect"
             else:
                 nextAction = "move"
