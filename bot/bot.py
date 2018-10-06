@@ -34,6 +34,9 @@ def normalize_tiles(gameMap):
                 result[coord.y][coord.x] = 'R'
             if tile.TileContent == TileContent.House:
                 result[coord.y][coord.x] = ' '
+            if tile.TileContent == TileContent.Wall:
+                result[coord.y][coord.x] = 'T'
+                
 
 
     return result
@@ -73,7 +76,7 @@ def solve_path(maze, start, goal):
         if current_node.coords == goal.coords:
             return reconstruct_path(maze, paths, current_node.coords)
         
-        neighbors = get_neighbors(maze, current_node)
+        neighbors = get_neighbors(maze, current_node, goal)
         for neighbor in neighbors:
             neighbor.cost = current_node.cost + cost(maze, current_node, neighbor)
             neighbor.estimate = neighbor.cost + cost_estimate(maze, neighbor, goal)
@@ -89,7 +92,7 @@ def cost(maze, node, neighbor):
 def cost_estimate(maze, node, goal):
     return manhattan(node.coords, goal.coords) 
 
-def get_neighbors(maze, node):
+def get_neighbors(maze, node, goal):
     result = []
     left  = (node.coords[0]-1, node.coords[1])
     up    = (node.coords[0], node.coords[1]-1)
@@ -100,7 +103,7 @@ def get_neighbors(maze, node):
     for pos in positions:
         if pos[0] < 0 or pos[1] < 0:
             continue
-        if maze[pos[1]][pos[0]] == ' ' or maze[pos[1]][pos[0]] == 'R':
+        if pos == goal.coords or maze[pos[1]][pos[0]] == ' ': # or maze[pos[1]][pos[0]] == 'T':
             result.append(Node(pos[0], pos[1]))
     return result
 
