@@ -1,4 +1,5 @@
 from helper import *
+import math 
 
 
 class Bot:
@@ -7,8 +8,10 @@ class Bot:
 
     def findClosest(self, tiles, type):
         for tile in tiles:
-            if tile.TileContent == 4:
-                ressources[]
+            if tile.TileContent == 4 :
+                # ressources[] TODO
+        return 0
+
 
     def evaluateRessource(self):
         self.gameMap.tiles
@@ -18,7 +21,28 @@ class Bot:
         return 0
 
     def evaluateUpgrade(self):
-        self.path
+
+        essentialItems = ["Sword", "Shield", "Backpack"]
+        totalRessources = self.PlayerInfo.totalRessources
+        level = self.PlayerInfo.getUpgradeLevel(self, self.PlayerInfo.CarryingCapacity)
+        priority = -math.inf, None
+        
+        if(level <= 3):
+            if level == 1 and totalRessources >= 10000:
+                priority = math.inf, UpgradeType.CarryingCapacity
+            if level == 2 and totalRessources >= 15000:
+                priority = math.inf, UpgradeType.CarryingCapacity
+            if level == 3 and totalRessources >= 25000:
+                priority = math.inf, UpgradeType.CarryingCapacity
+        else:
+            if all(i in essentialItems for i in self.playerInfo.carriedItems):
+               if level == 4 and totalRessources >= 50000:
+                    priority = math.inf, UpgradeType.CarryingCapacity
+
+        return priority
+            
+
+    def evaluatePurchase(self):
         return 0
 
     def before_turn(self, playerInfo):
