@@ -57,7 +57,7 @@ def reconstruct_path(maze, paths, node):
     return result
 
 def solve_path(maze, start, goal):
-    print_view(maze)
+    #print_view(maze)
     costs = {start.coords: 0}
     paths = {start.coords: None}
     queue = PriorityQueue() 
@@ -149,7 +149,11 @@ class Bot:
         print(self.PlayerInfo.UpgradeLevels)
         if pos.coords == house.coords:
             player = self.PlayerInfo
-
+            attackLevel = player.UpgradeLevels[UpgradeType.AttackPower]
+            cost = [10000, 15000, 25000, 50000, 200000]
+            print(player.UpgradeLevels)
+            if player.TotalResources > cost[attackLevel]:
+                return create_upgrade_action(UpgradeType.AttackPower)
             #if player.player.TotalResources > 10000:
             pass
             #return create_
