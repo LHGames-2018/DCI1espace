@@ -143,8 +143,12 @@ class Bot:
 
     def evaluatekill(self):
         closestplayer = self.sortClosest(self.gameMap.tiles, 6)
-        path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, closestplayer)
-        return RESSOURCE_BY_BLOC / len(path)
+        path = None
+        i = 0
+        while path != None:
+            path = solve_path(self.gameMap.tiles, self.PlayerInfo.Position, closestplayer[i])
+            i += 1
+        return RESSOURCE_BY_PLAYER / len(path)
 
     def evaluateUpgrade(self):
 
@@ -239,7 +243,7 @@ class Bot:
                 nextAction = "move"
 
         elif nextPlan == "goKill":
-            if len(self.path) < 2:
+            if len(self.path) < 2 or self.gameMap.getTileAt(self.path[0]+self.PlayerInfo.Position) == 1:
                 nextAction = "attack"
             else:
                 nextAction = "move"
