@@ -118,6 +118,19 @@ class Bot:
     def __init__(self):
         pass
 
+    def go_home(self, gameMap):
+        tiles = normalize_tiles(gameMap)
+        pos = self.PlayerInfo.Position
+        pos = Node(pos.x, pos.y)
+        house = self.PlayerInfo.HouseLocation
+        house = Node(house.x, house.y)
+        path = solve_path(tiles, pos, house)
+        if path != "Could not find a solution.":
+            point = Point(path[0][0], path[0][1])
+            return create_move_action(point)
+        else:
+            return create_move_action(Point(-1, 0))
+
     def before_turn(self, playerInfo):
         """
         Gets called before ExecuteTurn. This is where you get your bot's state.
@@ -130,6 +143,11 @@ class Bot:
         tiles = normalize_tiles(gameMap)
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
+        house = self.PlayerInfo.HouseLocation
+        house = Node(house.x, house.y)
+        
+        if pos.coords == house.coords and self.PlayerInfo.TotalResources > 10000:
+            return create_
         if self.PlayerInfo.CarriedResources < 1000:
             ressources = self.get_ressources(gameMap.tiles)
             #print(ressources)
@@ -151,14 +169,7 @@ class Bot:
             else:
                 return create_collect_action(point)
         else:
-            house = self.PlayerInfo.HouseLocation
-            house = Node(house.x, house.y)
-            path = solve_path(tiles, pos, house)
-            if path != "Could not find a solution.":
-                point = Point(path[0][0], path[0][1])
-                return create_move_action(point)
-            else:
-                print("NO path")
+            return self.go_home(gameMap)
         #path = solve_path(tiles, pos, closest_res)
         #print(path)
         #print(solve_path(gameMap, pos, )
