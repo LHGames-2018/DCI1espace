@@ -1,6 +1,8 @@
 from helper import *
 import math 
 
+RESSOURCE_BY_BLOC = 1000 # guess
+RESSOURCE_BY_PLAYER = 1000 # TODO more details
 
 class Bot:
     def __init__(self):
@@ -8,17 +10,19 @@ class Bot:
 
     def findClosest(self, tiles, type):
         for tile in tiles:
-            if tile.TileContent == 4 :
+            if tile.TileContent == type :
                 # ressources[] TODO
         return 0
 
-
     def evaluateRessource(self):
-        self.gameMap.tiles
-        return 0
+        closestRessource = self.findClosest(self.gameMap.tiles, 4)
+        path = pathFinfing(self.PlayerInfo.position, closestRessource)
+        return RESSOURCE_BY_BLOC / len(path)
 
     def evaluatekill(self):
-        return 0
+        closestplayer = self.findClosest(self.gameMap.tiles, 6)
+        path = pathFinfing(self.PlayerInfo.position, closestplayer)
+        return RESSOURCE_BY_BLOC / len(path)
 
     def evaluateUpgrade(self):
 
@@ -61,11 +65,6 @@ class Bot:
         self.gameMap = gameMap
         self.visiblePlayers = visiblePlayers
 
-        # Save house position
-        for tile in gameMap.tiles:
-            if tile.TileContent == 2:
-                housePos = tile.Position
-
         Costs = {"ressource":0, "kill":0, "upgrade":0}
 
         Costs["getRessource"] = self.evaluateRessource()
@@ -76,7 +75,7 @@ class Bot:
 
         # PLAN
         if nextPlan == "getRessource":
-            if len(self.path) < 2 or self.path[0]+self.PlayerInfo.Position == housePos:
+            if len(self.path) < 2 or self.path[0]+self.PlayerInfo.Position == self.PlayerInfo.HouseLocation:
                 nextAction = "collect"
             else:
                 nextAction = "move"
