@@ -172,7 +172,7 @@ class Bot:
                 path = solve_path(tiles, pos, ressources[i])
                 if path != None:
                     break
-            if len(ressources) == 0 or path == None:
+            if len(ressources) == 0 or path == None or len(path) < 1:
                 return self.go_home(gameMap)
 
             print(self.PlayerInfo.CarriedResources)
