@@ -254,7 +254,7 @@ class Bot:
         if self.prev_score < self.PlayerInfo.Score:
             self.count += 1
             self.prev_score = self.PlayerInfo.Score
-            self.count % 3 == 0:
+            if self.count % 3 == 0:
                 self.peace = 25
                 self.count = 2
 
