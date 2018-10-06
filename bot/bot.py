@@ -6,7 +6,9 @@ class Bot:
         pass
 
     def findClosest(self, tiles, type):
-        for tile in tiles
+        for tile in tiles:
+            if tile.TileContent == 4:
+                ressources[]
 
     def evaluateRessource(self):
         self.gameMap.tiles
