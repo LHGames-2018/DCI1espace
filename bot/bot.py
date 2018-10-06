@@ -252,7 +252,7 @@ class Bot:
         self.peace -= 1
         if self.prev_score < self.PlayerInfo.Score:
             self.prev_score = self.PlayerInfo.Score
-            self.peace = 10
+            self.peace = 25
 
         try:
             pass
