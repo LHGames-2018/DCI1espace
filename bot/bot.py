@@ -153,6 +153,7 @@ class Bot:
     def __init__(self):
         self.peace = 0
         self.prev_score = 0
+        self.count = 1
         pass
 
     def sortClosest(self, tiles, type):
@@ -251,8 +252,11 @@ class Bot:
         """
         self.peace -= 1
         if self.prev_score < self.PlayerInfo.Score:
+            self.count += 1
             self.prev_score = self.PlayerInfo.Score
-            self.peace = 25
+            self.count % 3 == 0:
+                self.peace = 25
+                self.count = 2
 
         try:
             pass
