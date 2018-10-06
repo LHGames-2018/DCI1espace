@@ -51,13 +51,13 @@ def reconstruct_path(maze, paths, node):
     while paths[node] != None:
         prev = paths[node]
         move = (node[0]-prev[0], node[1]-prev[1])
-        result.insert(len(result), move)
+        result.insert(0, move)
         node = prev
     
     return result
 
 def solve_path(maze, start, goal):
-    #print_view(maze)
+    print_view(maze)
     costs = {start.coords: 0}
     paths = {start.coords: None}
     queue = PriorityQueue() 
@@ -81,7 +81,7 @@ def solve_path(maze, start, goal):
                 paths[neighbor.coords] = current_node.coords
                 queue.put(neighbor)
                 costs[neighbor.coords] = neighbor.cost
-    return "Could not find a solution."
+    return None #"Could not find a solution."
 
 def cost(maze, node, neighbor):
     return 1
@@ -125,7 +125,7 @@ class Bot:
         house = self.PlayerInfo.HouseLocation
         house = Node(house.x, house.y)
         path = solve_path(tiles, pos, house)
-        if path != "Could not find a solution.":
+        if path != None:
             point = Point(path[0][0], path[0][1])
             return create_move_action(point)
         else:
@@ -147,7 +147,8 @@ class Bot:
         house = Node(house.x, house.y)
         
         if pos.coords == house.coords and self.PlayerInfo.TotalResources > 10000:
-            return create_
+            pass
+            #return create_
         if self.PlayerInfo.CarriedResources < 1000:
             ressources = self.get_ressources(gameMap.tiles)
             #print(ressources)
@@ -156,14 +157,16 @@ class Bot:
             print(closest_res.coords)
 
             ressources.sort(key=lambda x: manhattan(pos.coords, x.coords))
-
             for i in range(len(ressources)):
                 path = solve_path(tiles, pos, ressources[i])
-                if path != "Could not find a solution.":
+                if path != None:
                     break
+            if len(ressources) == 0 or path == None:
+                return self.go_home(gameMap)
 
             print(self.PlayerInfo.CarriedResources)
             point = Point(path[0][0], path[0][1])
+            print(path)
             if len(path) > 1:
                 return create_move_action(point)
             else:
