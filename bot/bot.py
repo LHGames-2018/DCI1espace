@@ -57,7 +57,7 @@ def reconstruct_path(maze, paths, node):
     return result
 
 def solve_path(maze, start, goal):
-    print_view(maze)
+    #print_view(maze)
     costs = {start.coords: 0}
     paths = {start.coords: None}
     queue = PriorityQueue() 
@@ -126,11 +126,11 @@ class Bot:
         self.PlayerInfo = playerInfo
 
     def execute_turn(self, gameMap, visiblePlayers):
-        return create_move_action(Point(0, 1))
+        #return create_move_action(Point(0, 1))
         tiles = normalize_tiles(gameMap)
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
-        if False and self.PlayerInfo.CarriedResources < 1000:
+        if self.PlayerInfo.CarriedResources < 1000:
             ressources = self.get_ressources(gameMap.tiles)
             #print(ressources)
             #print(pos)
