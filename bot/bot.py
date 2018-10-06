@@ -12,7 +12,6 @@ class Bot:
                 # ressources[] TODO
         return 0
 
-
     def evaluateRessource(self):
         self.gameMap.tiles
         return 0
@@ -27,13 +26,13 @@ class Bot:
         level = self.PlayerInfo.getUpgradeLevel(self, self.PlayerInfo.CarryingCapacity)
         priority = -math.inf, None
         
-        if(level <= 3):
+        if level <= 3:
             if level == 1 and totalRessources >= 10000:
-                priority = math.inf, UpgradeType.CarryingCapacity
+                priority = math.inf, UpgradeType.Attack
             if level == 2 and totalRessources >= 15000:
-                priority = math.inf, UpgradeType.CarryingCapacity
+                priority = math.inf, UpgradeType.Attack
             if level == 3 and totalRessources >= 25000:
-                priority = math.inf, UpgradeType.CarryingCapacity
+                priority = math.inf, UpgradeType.Attack
         else:
             if all(i in essentialItems for i in self.playerInfo.carriedItems):
                if level == 4 and totalRessources >= 50000:
@@ -41,9 +40,22 @@ class Bot:
 
         return priority
             
-
     def evaluatePurchase(self):
-        return 0
+        
+        priority = -math.inf, None
+        totalRessources = self.PlayerInfo.totalRessources
+        carriedItems = self.playerInfo.carriedItems
+        
+        if totalRessources >= 30000 and Backpack not in carriedItems:
+            priority = math.inf, PurchasableItem.Backpack
+        if totalRessources >= 30000 and Backpack in carriedItems and Pickaxe not in carriedItems:
+            priority = math.inf, PurchasableItem.Pickaxe
+        if totalRessources >= 30000 and Backpack in carriedItems and Pickaxe in carriedItems:
+            priority = math.inf, PurchasableItem.Sword
+
+        return priority
+
+
 
     def before_turn(self, playerInfo):
         """
