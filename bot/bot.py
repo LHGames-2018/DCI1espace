@@ -129,7 +129,7 @@ class Bot:
         tiles = normalize_tiles(gameMap)
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
-        if self.PlayerInfo.CarriedResources < 1000:
+        if False and self.PlayerInfo.CarriedResources < 1000:
             ressources = self.get_ressources(gameMap.tiles)
             #print(ressources)
             #print(pos)
