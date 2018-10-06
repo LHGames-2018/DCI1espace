@@ -18,12 +18,44 @@ class Node():
 def manhattan(coord1, coord2):
     return abs(coord1[0]-coord2[0]) + abs(coord1[1]-coord2[1])
 
-def normalize_tiles(gameMap):
-    result = [['#' for _ in range(gameMap.xMax+1)] for _ in range(gameMap.yMax+1)]
+def normalize_tiles(gameMap, playerPos):
     tiles = gameMap.tiles
+    max_x = 0
+    max_y = 0
+    for row in tiles:
+        for tile in row:
+            if tile.Position.x > max_x:
+                max_x = tile.Position.x
+            if tile.Position.y > max_y:
+                max_y = tile.Position.y
+
+    overflow_left = 0
+    overflow_up = 0
+    overflow_right = 0
+    overflow_down = 0
+    if playerPos.x - 10 < 0:
+        overflow_left = abs(playerPos.x-10)
+    if playerPos.y - 10 < 0:
+        overflow_up = abs(playerPos.y-10)
+    if playerPos.x + 10 > max_x:
+        overflow_right = (playerPos.x+10) - max_x
+    if playerPos.y + 10 > max_y:
+        overflow_down  = (playerPos.y+10) - max_y
+
+    result = [[' ' for _ in range(255)] for _ in range(255)]
     for row in tiles:
         for tile in row:
             coord = tile.Position
+            if coord.x > max_x - overflow_left:
+                coord.x = 254 - (max_x - coord.x)
+            if coord.y > max_y - overflow_up:
+                coord.y = 254 - (max_y - coord.y)
+
+            if coord.y < overflow_down:
+                coord.y = max_y + coord.y + 1
+            if coord.x < overflow_right:
+                coord.x = max_x + coord.x + 1
+
             if tile.TileContent == TileContent.Empty:
                 result[coord.y][coord.x] = ' '
             if tile.TileContent == TileContent.Resource:
@@ -32,6 +64,12 @@ def normalize_tiles(gameMap):
                 result[coord.y][coord.x] = ' '
             if tile.TileContent == TileContent.Wall:
                 result[coord.y][coord.x] = 'T'
+            if tile.TileContent == TileContent.Lava:
+                result[coord.y][coord.x] = '#'
+            if tile.TileContent == TileContent.Player:
+                result[coord.y][coord.x] = 'P'
+            if tile.TileContent == TileContent.Shop:
+                result[coord.y][coord.x] = 'S'
     return result
 
 def print_view(maze):
@@ -93,9 +131,15 @@ def get_neighbors(maze, node, goal):
     Positions = [up, right, down, left]
 
     for pos in Positions:
-        if pos[0] < 0 or pos[1] < 0:
-            continue
-        if pos == goal.coords or maze[pos[1]][pos[0]] == ' ': # or maze[pos[1]][pos[0]] == 'T':
+        if pos[0] < 0:
+            pos[0] = 254
+        if pos[1] < 0:
+            pos[1] = 254
+        if pos[0] >= 255:
+            pos[0] = 0
+        if pos[1] >= 255:
+            pos[1] = 0
+        if pos == goal.coords or maze[pos[1]][pos[0]] == ' ' or maze[pos[1]][pos[0]] == 'T':
             result.append(Node(pos[0], pos[1]))
     return result
 
@@ -119,25 +163,36 @@ class Bot:
         return ressources
 
     def evaluateRessource(self):
+        return -math.inf
         closestRessource = self.sortClosest(self.gameMap.tiles, 4)
-        path = None
-        i = 0
-        while path != None:
-            path = solve_path(self.gameMap._tiles, self.PlayerInfo.Position, closestRessource[i])
-            i += 1
+
+        for ressource in closestRessource:
+            pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+            path = solve_path(self.gameMap._tiles, pos, ressource)
+            if path != None:
+                self.ressourcePath = path
+                break
+        if len(closestRessource) == 0:
+            return -math.inf
         return RESSOURCE_BY_BLOC / len(path)
 
     def evaluatekill(self):
-        closestplayer = self.sortClosest(self.gameMap.tiles, 6)
-        path = None
-        i = 0
-        while path != None:
-            path = solve_path(self.gameMap._tiles, self.PlayerInfo.Position, closestplayer[i])
-            i += 1
+        closestplayer = self.sortClosest(self.gameMap.tiles, TileContent.Player)[1:]
+
+        for player in closestplayer:
+            pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+            path = solve_path(self.gameMap._tiles, pos, player)
+            if path != None:
+                self.killingPath = path
+                break
+        if len(closestplayer) == 0:
+            print("wtf")
+            return -math.inf
+        print("test", len(path), RESSOURCE_BY_PLAYER / len(path))
         return RESSOURCE_BY_PLAYER / len(path)
 
     def evaluateUpgrade(self):
-
+        return -math.inf, UpgradeType.AttackPower
         essentialItems = ["Sword", "Shield", "Backpack"]
         totalRessources = self.PlayerInfo.totalRessources
         level = self.PlayerInfo.getUpgradeLevel(self, self.PlayerInfo.CarryingCapacity)
@@ -162,7 +217,7 @@ class Bot:
         return 0
 
     def go_home(self, gameMap):
-        tiles = normalize_tiles(gameMap)
+        tiles = normalize_tiles(gameMap, Point(self.ownPos.coords[0], self.ownPos.coords[1]))
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
         house = self.PlayerInfo.HouseLocation
@@ -171,7 +226,7 @@ class Bot:
         if path != None:
             point = Point(path[0][0], path[0][1])
             return create_move_action(point)
-        else    
+        else:
             print("something bad happened")
             return create_move_action(Point(-1, 0))
 
@@ -188,40 +243,59 @@ class Bot:
             :param gameMap: The gamemap.
             :param visiblePlayers:  The list of visible players.
         """
+        self.ownPos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+        self.housePos = Node(self.PlayerInfo.HouseLocation.x, self.PlayerInfo.HouseLocation.y)
         self.gameMap = gameMap
-        self.gameMap._tiles = normalize_tiles(self.gameMap)
+        self.gameMap._tiles = normalize_tiles(self.gameMap, self.PlayerInfo.Position)
         self.visiblePlayers = visiblePlayers
 
-        Costs = {"ressource":0, "kill":0, "upgrade":0}
+        # GO KILLING LEFT
+        if len(self.sortClosest(self.gameMap.tiles, TileContent.Player)) == 1:
+            print("test")
+            pos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
+            print("yMin: ", self.gameMap.yMin)
+            yMin = self.gameMap.yMin
+            xMin = self.gameMap.xMin
+            if yMin < 0:
+                yMin = 255 + yMin
+            if xMin < 0:
+                xMin = 255 + xMin
+            Target = Node(xMin, yMin)
+            self.path = solve_path(self.gameMap._tiles, pos, Target)
+            return self.move(self.path)
+            #create_move_action(self.path[0])
 
-        while len(self.sortClosest(self.gameMap.tiles, 6)) == 0:
-            path = solve_path(self.gameMap._tiles, self.PlayerInfo.Position, Point(self.gameMap.xMin, self.PlayerInfo.Position.y))
-            create_move_action(self.path[0])
-
+        Costs = {"ressource": -math.inf, "kill": -math.inf, "upgrade": -math.inf}
         Costs["getRessource"] = self.evaluateRessource()
         Costs["goKill"] = self.evaluatekill()
         Costs["goUpgrade"], item = self.evaluateUpgrade()
 
-        nextPlan = min(Costs, key=Costs.get)
+        print(Costs)
+        nextPlan = max(Costs, key=Costs.get)
+        print(nextPlan)
 
         # PLAN
+        nextAction = ""
         if nextPlan == "getRessource":
-            if len(self.path) < 2 and self.path[0]+self.PlayerInfo.Position != self.PlayerInfo.HouseLocation:
+            self.path = self.ressourcePath
+            next_node = Node(self.path[0]+self.ownPos[0], self.path[1]+self.ownPos[1])
+            if len(self.path) < 2 and next_node.coords != self.housePos.coords:
                 nextAction = "collect"
             else:
                 nextAction = "move"
 
         elif nextPlan == "goKill":
-            if len(self.path) < 2 or self.gameMap.getTileAt(self.path[0]+self.PlayerInfo.Position) == 1:
-                nextAction = "attack"
-            else:
-                nextAction = "move"
+            self.path = self.killingPath
+            print(self.path)
+            return self.move(self.path)
 
         elif nextPlan == "goUpgrade":
+            self.path = self.upgradePath
             if len(self.path) < 2:
-                nextAction = "purchase"
+                nextAction = "upgrade"
             else:
                 nextAction = "move"
+            
 
         # ACTION
         if nextPlan == "move":
@@ -231,10 +305,20 @@ class Bot:
         elif nextAction == "attack":
             return create_attack_action(self.path[0])
         elif nextAction == "purchase":
-            return create_purchase_action(item)
+            return create_upgrade_action(item)
+        else:
+            return create_move_action(Point(-1, 0))
 
     def after_turn(self):
         """
         Gets called after executeTurn
         """
         pass
+
+    def move(self, path):
+        next_node = Point(path[0][0]+self.ownPos.coords[0], path[0][1]+self.ownPos.coords[1])
+        if self.gameMap.getTileAt(next_node) == TileContent.Wall or self.gameMap.getTileAt(next_node) == TileContent.Player:
+            return create_attack_action(Point(path[0][0], path[0][1]))
+        else:
+            return create_move_action(Point(path[0][0], path[0][1]))
+        
