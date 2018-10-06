@@ -126,6 +126,7 @@ class Bot:
         self.PlayerInfo = playerInfo
 
     def execute_turn(self, gameMap, visiblePlayers):
+        return create_move_action(Point(0, 1))
         tiles = normalize_tiles(gameMap)
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
