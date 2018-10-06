@@ -18,7 +18,7 @@ class Node():
 def manhattan(coord1, coord2):
     return abs(coord1[0]-coord2[0]) + abs(coord1[1]-coord2[1])
 
-def normalize_tiles(gameMap, playerPos):
+def normalize_tiles(gameMap, playerPos, housePos):
     tiles = gameMap.tiles
     max_x = 0
     max_y = 0
@@ -46,22 +46,25 @@ def normalize_tiles(gameMap, playerPos):
     for row in tiles:
         for tile in row:
             coord = tile.Position
-            if coord.x > max_x - overflow_left:
-                coord.x = 254 - (max_x - coord.x)
-            if coord.y > max_y - overflow_up:
-                coord.y = 254 - (max_y - coord.y)
+            #if coord.x > max_x - overflow_left:
+            #    coord.x = 254 - (max_x - coord.x)
+            #if coord.y > max_y - overflow_up:
+            #    coord.y = 254 - (max_y - coord.y)
 
-            if coord.y < overflow_down:
-                coord.y = max_y + coord.y + 1
-            if coord.x < overflow_right:
-                coord.x = max_x + coord.x + 1
+            #if coord.y < overflow_down:
+            #    coord.y = max_y + coord.y + 1
+            #if coord.x < overflow_right:
+            #    coord.x = max_x + coord.x + 1
 
             if tile.TileContent == TileContent.Empty:
                 result[coord.y][coord.x] = ' '
             if tile.TileContent == TileContent.Resource:
                 result[coord.y][coord.x] = 'R'
             if tile.TileContent == TileContent.House:
-                result[coord.y][coord.x] = ' '
+                if housePos.x == coord.x and housePos.y == coord.y:
+                    result[coord.y][coord.x] = ' '
+                else:
+                    result[coord.y][coord.x] = '#'
             if tile.TileContent == TileContent.Wall:
                 result[coord.y][coord.x] = 'T'
             if tile.TileContent == TileContent.Lava:
@@ -96,10 +99,6 @@ def solve_path(maze, start, goal):
     queue = PriorityQueue() 
     queue.put(start)
 
-    try:
-        print(StorageHelper.read("test"))
-    except:
-        pass
     print(start.coords, goal.coords)
 
     while not queue.empty():
@@ -135,14 +134,14 @@ def get_neighbors(maze, node, goal):
     Positions = [up, right, down, left]
 
     for pos in Positions:
-        if pos[0] < 0:
-            pos[0] = 254
-        if pos[1] < 0:
-            pos[1] = 254
-        if pos[0] >= 255:
-            pos[0] = 0
-        if pos[1] >= 255:
-            pos[1] = 0
+        #if pos[0] < 0:
+        #    pos[0] = 254
+        #if pos[1] < 0:
+        #    pos[1] = 254
+        #if pos[0] >= 255:
+        #    pos[0] = 0
+        #if pos[1] >= 255:
+        #    pos[1] = 0
         if pos == goal.coords or maze[pos[1]][pos[0]] == ' ' or maze[pos[1]][pos[0]] == 'T':
             result.append(Node(pos[0], pos[1]))
     return result
@@ -221,7 +220,8 @@ class Bot:
         return 0
 
     def go_home(self, gameMap):
-        tiles = normalize_tiles(gameMap, Point(self.ownPos.coords[0], self.ownPos.coords[1]))
+        return
+        #tiles = normalize_tiles(gameMap, Point(self.ownPos.coords[0], self.ownPos.coords[1]))
         pos = self.PlayerInfo.Position
         pos = Node(pos.x, pos.y)
         house = self.PlayerInfo.HouseLocation
@@ -247,10 +247,19 @@ class Bot:
             :param gameMap: The gamemap.
             :param visiblePlayers:  The list of visible players.
         """
+        try:
+            pass
+            #prev_score = int(StorageHelper.read("points"))
+            #if prev_score < self.playerInfo.Score:
+            #    StorageHelper.write("peace", 10)
+        except:
+            pass
+            #StorageHelper.write("points", self.PlayerInfo.Score)
+
         self.ownPos = Node(self.PlayerInfo.Position.x, self.PlayerInfo.Position.y)
         self.housePos = Node(self.PlayerInfo.HouseLocation.x, self.PlayerInfo.HouseLocation.y)
         self.gameMap = gameMap
-        self.gameMap._tiles = normalize_tiles(self.gameMap, self.PlayerInfo.Position)
+        self.gameMap._tiles = normalize_tiles(self.gameMap, self.PlayerInfo.Position, self.PlayerInfo.HouseLocation)
         self.visiblePlayers = visiblePlayers
 
         # GO KILLING LEFT
