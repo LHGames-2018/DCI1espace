@@ -284,7 +284,7 @@ class Bot:
                 yMin = 255 + yMin
             if xMin < 0:
                 xMin = 255 + xMin
-            Target = Node(xMax, self.PlayerInfo.Position.y)
+            Target = Node(xMin, self.PlayerInfo.Position.y)
             self.path = solve_path(self.gameMap._tiles, pos, Target)
             return self.move(self.path)
             #create_move_action(self.path[0])
